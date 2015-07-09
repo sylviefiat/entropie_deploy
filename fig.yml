@@ -1,0 +1,29 @@
+mysql:
+  hostname: mysql
+  image: centurylink/mysql
+  volumes:
+    - ./mysql_data:/var/lib/mysql
+  ports:
+    - "3306:3306"
+  environment:
+    - MYSQL_DATABASE=concrete
+    - MYSQL_USERNAME=docker
+    - MYSQL_PASSWORD=docker
+    - MYSQL_ROOT_PASSWORD=docker
+
+concrete5:
+  hostname: concrete5
+  image: sylviefiat/docker-concrete5.7
+  ports:
+    - "80:80"
+  environment:
+    - DB_USER=root
+    - DB_PASS=docker
+    - DB_HOST=mysql
+    - DB_NAME=concrete
+  volumes:
+    - ./concrete5_data/application:/app/application
+    - ./concrete5_data/packages:/app/packages
+    - ./concrete5_data/updates:/app/updates
+  links:
+    - mysql:mysql
