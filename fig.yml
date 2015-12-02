@@ -23,9 +23,9 @@ entropie:
     - DB_HOST=mysql
     - DB_NAME=concrete
   volumes:
-    - ./concrete5_data/application:/app/application
-    - ./concrete5_data/packages:/app/packages
-    - ./concrete5_data/updates:/app/updates
+    - ./entropie_data/application:/app/application
+    - ./entropie_data/packages:/app/packages
+    - ./entropie_data/updates:/app/updates
   links:
     - entropiedb:entropiedb
 
@@ -34,7 +34,7 @@ entropiegis:
   command: "/opt/geoserver/bin/startup.sh"
   hostname: entropiegis
   volumes:
-    - ./geoserver_data:/opt/geoserver/data_dir
+    - ./entropiegis_data:/opt/geoserver/data_dir
   ports:
     - "8081:8080"
   links:
@@ -59,7 +59,9 @@ oreanetgis:
   command: "/opt/geoserver/bin/startup.sh"
   hostname: oreanetgis
   volumes:
-    - ./geoserver_data:/opt/geoserver/data_dir
+    - ./oreanetgis_data/data_dir:/opt/geoserver/data_dir
+    - ./oreanetgis_data/WEB-INF:/opt/geoserver/webapps/geoserver/WEB-INF
+    - ./oreanetgis_data/lib:/opt/geoserver/lib
   ports:
     - "8082:8080"
   links:
@@ -71,13 +73,23 @@ oreanet:
   hostname: oreanet
   ports:
     - 82:80
+    - 25:25
   volumes:
-    - ./joomla_data/templates:/app/templates
-    - ./joomla_data/tmp:/app/tmp
-    - ./joomla_data/images:/app/images
+    - ./oreanet_data/app:/app
   links:
     - oreanetdb:oreanetdb
-    - oreanetgs:oreanetgs
+    - oreanetgis:oreanetgis
+
+oreanetrest:
+  image: sylviefiat/apache-php
+  command: /run.sh
+  hostname: oreanetrest
+  ports:
+    - 83:80
+  volumes:
+    - ./oreanet_rest_data/html:/var/www/html
+  links:
+    - oreanetdb:oreanetdb
 
 # PROXY ROUTER FOR DOCKER
 redis:
@@ -99,4 +111,5 @@ hipache:
     - entropiegis:entropiegis
     - oreanetgis:oreanetgis
     - oreanet:oreanet
+    - oreanetrest:oreanetrest
     - redis:redis
