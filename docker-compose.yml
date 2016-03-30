@@ -1,0 +1,41 @@
+# UMR ENTROPIE WEBSITE
+entropiedb:
+  hostname: entropiedb
+  image: centurylink/mysql
+  volumes:
+    - ./entropiedb_data:/var/lib/mysql
+  ports:
+    - "3306:3306"
+  environment:
+    - MYSQL_DATABASE=concrete
+    - MYSQL_USERNAME=docker
+    - MYSQL_PASSWORD=docker
+    - MYSQL_ROOT_PASSWORD=docker
+
+entropie:
+  hostname: entropie
+  image: sylviefiat/docker-concrete5.7
+  ports:
+    - "81:80"
+  environment:
+    - DB_USER=root
+    - DB_PASS=docker
+    - DB_HOST=mysql
+    - DB_NAME=concrete
+  volumes:
+    - ./entropie_data/application:/app/application
+    - ./entropie_data/packages:/app/packages
+    - ./entropie_data/updates:/app/updates
+  links:
+    - entropiedb:entropiedb
+
+entropiegis:
+  image: sylviefiat/docker-geoserver
+  command: "/opt/geoserver/bin/startup.sh"
+  hostname: entropiegis
+  volumes:
+    - ./entropiegis_data:/opt/geoserver/data_dir
+  ports:
+    - "8081:8080"
+  links:
+    - entropiedb:entropiedb
