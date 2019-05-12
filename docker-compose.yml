@@ -1,44 +1,76 @@
 # UMR ENTROPIE WEBSITE
-entropieadb:
-  hostname: entropieadb
-  image: sylviefiat/alpine-mysql
-  volumes:
-    - ./entropieadb_data:/var/lib/mysql
-  ports:
-    - "3308:3306"
-  environment:
-    - MYSQL_USER=docker
-    - MYSQL_USER_PWD=docker
-    - MYSQL_ROOT_PWD=docker
+version: '2'
+services:
+  entropieadb:
+    hostname: entropieadb
+    image: sylviefiat/alpine-mysql
+    volumes:
+      - ./entropieadb_data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_USER=docker
+      - MYSQL_USER_PWD=docker
+      - MYSQL_ROOT_PWD=docker
 
-entropie:
-  hostname: entropie
-  image: sylviefiat/docker-concrete5.7
-  ports:
-    - "81:80"
-    - "24:25"
-  environment:
-    - DB_USER=root
-    - DB_PASS=docker
-    - DB_HOST=mysql
-    - DB_NAME=concrete
-  volumes:
-    - ./entropie_data/application:/app/application
-    - ./entropie_data/packages:/app/packages
-    - ./entropie_data/updates:/app/updates
-    - ./entropie_data/concrete:/app/concrete
-  links:
-    - entropiedb:entropiedb
-    - entropieadb:entropieadb
-    - entropiegis:entropiegis
+  entropie:
+    hostname: entropie
+    image: sylviefiat/docker-concrete5.7
+    ports:
+      - "81:80"
+      - "24:25"
+    environment:
+      - DB_USER=root
+      - DB_PASS=docker
+      - DB_HOST=mysql
+      - DB_NAME=concrete
+    volumes:
+      - ./entropie_data/application:/app/application
+      - ./entropie_data/packages:/app/packages
+      - ./entropie_data/updates:/app/updates
+      - ./entropie_data/concrete:/app/concrete
+    links:
+      - entropieadb:entropieadb
+      - entropiegis:entropiegis
 
-entropiegis:
-  hostname: entropiegis
-  image: sylviefiat/docker-geoserver
-  command: "/opt/geoserver/bin/startup.sh"
-  volumes:
-    - ./entropiegis_data:/opt/geoserver/data_dir
-  ports:
-    - "8081:8080"
-  links:
-    - entropiedb:entropiedb
+  entropiegis:
+    hostname: entropiegis
+    image: sylviefiat/docker-geoserver
+    command: "/opt/geoserver/bin/startup.sh"
+    volumes:
+      - ./entropiegis_data:/opt/geoserver/data_dir
+    ports:
+      - "8081:8080"
+    links:
+      - entropieadb:entropieadb
+#      - wheredeploy_wheredb_1:wheredb
+
+  # GEONETWORK DATABASE
+  entropiegndb:
+    hostname: entropiegndb
+    image: postgres:9.5.2
+    volumes:
+      - ./entropiegndb_data/pg_data:/pg_data/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=geonetwork
+
+# GEONETWORK
+  entropiegn:
+    hostname: entropiegn
+    image: geocat/geonetwork:3.2.0-postgres
+    volumes:
+      - ./entropiegn_data/config-viewer.xml:/usr/local/tomcat/webapps/geonetwork/WEB-INF/data/data/resources/map/config-viewer.xml
+    ports:
+      - "8083:8080"
+    environment:
+      - DATA_DIR=/var/lib/geonetwork_data
+      - POSTGRES_DB_PASSWORD=docker
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_HOST=entropiegndb
+    links:
+      - entropiegndb:entropiegndb
+
